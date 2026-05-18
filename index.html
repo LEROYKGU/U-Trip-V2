@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UTrip — Where are you flying?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── DESIGN TOKENS ─────────────────────────────────────────────────── */
+    :root {
+      --bg:        #f5f1eb;
+      --surface:   #fffdf9;
+      --border:    #e0d9ce;
+      --text:      #1a1714;
+      --muted:     #7a7068;
+      --accent:    #c8572a;
+      --accent-lt: #f0e6df;
+      --gold:      #b8933a;
+      --shadow:    0 4px 32px rgba(26,23,20,.10);
+      --radius:    14px;
+      --nav-h:     68px;
+      --font-head: 'Playfair Display', Georgia, serif;
+      --font-body: 'DM Sans', sans-serif;
+      --transition: .3s cubic-bezier(.4,0,.2,1);
+    }
+    [data-theme="dark"] {
+      --bg:        #0f0d0b;
+      --surface:   #1c1916;
+      --border:    #2e2a25;
+      --text:      #ede8e1;
+      --muted:     #8a8078;
+      --accent:    #e06b38;
+      --accent-lt: #2a1e17;
+      --gold:      #d4a84b;
+      --shadow:    0 4px 32px rgba(0,0,0,.45);
+    }
+
+    /* ─── RESET ─────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      line-height: 1.6;
+      transition: background var(--transition), color var(--transition);
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; font-family: inherit; }
+
+    /* ─── NAV ────────────────────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: var(--nav-h);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .nav-logo {
+      font-family: var(--font-head);
+      font-size: 1.6rem; font-weight: 900;
+      letter-spacing: .18em; color: var(--accent);
+    }
+    .nav-links { display: flex; align-items: center; gap: 8px; }
+    .nav-links a, .nav-links button {
+      padding: 8px 16px; border-radius: 8px;
+      font-size: .875rem; font-weight: 500;
+      background: transparent; border: none; color: var(--text);
+      transition: background var(--transition), color var(--transition);
+    }
+    .nav-links a:hover, .nav-links button:hover { background: var(--accent-lt); color: var(--accent); }
+    .btn-cta {
+      background: var(--accent) !important; color: #fff !important;
+      border-radius: 8px; padding: 9px 20px !important;
+    }
+    .btn-cta:hover { opacity: .88; }
+    .theme-toggle {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      background: var(--surface); font-size: 1rem;
+      transition: border-color var(--transition);
+    }
+    .theme-toggle:hover { border-color: var(--accent); }
+
+    /* ─── HERO ───────────────────────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: calc(var(--nav-h) + 40px) 24px 80px;
+      position: relative; overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 40%, rgba(200,87,42,.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 70%, rgba(184,147,58,.06) 0%, transparent 60%);
+    }
+    [data-theme="dark"] .hero-bg {
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 40%, rgba(224,107,56,.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 70%, rgba(212,168,75,.09) 0%, transparent 60%);
+    }
+    .hero-eyebrow {
+      position: relative; z-index: 1;
+      font-size: .78rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 16px;
+      animation: fadeUp .7s ease both;
+    }
+    .hero-title {
+      position: relative; z-index: 1;
+      font-family: var(--font-head); font-size: clamp(3.2rem, 9vw, 7rem); font-weight: 900;
+      line-height: 1.0; text-align: center; color: var(--text);
+      animation: fadeUp .7s .1s ease both;
+    }
+    .hero-title span { color: var(--accent); }
+    .hero-sub {
+      position: relative; z-index: 1;
+      margin-top: 20px; font-size: 1.05rem; color: var(--muted); text-align: center; max-width: 480px;
+      animation: fadeUp .7s .2s ease both;
+    }
+
+    /* ─── SEARCH CARD ────────────────────────────────────────────────────── */
+    .search-card {
+      position: relative; z-index: 1;
+      margin-top: 44px; width: 100%; max-width: 860px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 28px 28px 24px;
+      animation: fadeUp .7s .3s ease both;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .search-tabs {
+      display: flex; gap: 6px; margin-bottom: 22px; flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 7px 18px; border-radius: 20px; border: 1.5px solid var(--border);
+      font-size: .82rem; font-weight: 600; background: transparent; color: var(--muted);
+      transition: all var(--transition);
+    }
+    .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .tab-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+    .search-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto;
+      gap: 12px; align-items: end;
+    }
+    .field { display: flex; flex-direction: column; gap: 5px; position: relative; }
+    .field label {
+      font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .12em;
+      color: var(--muted);
+    }
+    .field input, .field select {
+      padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px;
+      background: var(--bg); color: var(--text); font-family: inherit; font-size: .93rem;
+      outline: none; transition: border-color var(--transition), background var(--transition);
+    }
+    .field input:focus, .field select:focus { border-color: var(--accent); }
+    .field select { appearance: none; }
+    .autocomplete-list {
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 200;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      box-shadow: var(--shadow); overflow: hidden; display: none;
+    }
+    .autocomplete-list.open { display: block; }
+    .autocomplete-item {
+      padding: 10px 14px; cursor: pointer; font-size: .9rem;
+      display: flex; align-items: center; gap: 10px;
+      transition: background var(--transition);
+    }
+    .autocomplete-item:hover { background: var(--accent-lt); }
+    .autocomplete-item .flag { font-size: 1.1rem; }
+    .btn-search {
+      padding: 12px 26px; background: var(--accent); color: #fff;
+      border: none; border-radius: 10px; font-size: .9rem; font-weight: 700;
+      letter-spacing: .04em; transition: opacity var(--transition);
+      white-space: nowrap;
+    }
+    .btn-search:hover { opacity: .85; }
+
+    /* ─── SECTION COMMON ─────────────────────────────────────────────────── */
+    section { padding: 96px 24px; }
+    .section-label {
+      font-size: .72rem; font-weight: 700; letter-spacing: .22em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 10px;
+    }
+    .section-title {
+      font-family: var(--font-head); font-size: clamp(2rem, 5vw, 3rem); font-weight: 800;
+      line-height: 1.15; color: var(--text);
+    }
+    .section-head { max-width: 560px; }
+    .section-head p { margin-top: 14px; color: var(--muted); font-size: .97rem; max-width: 440px; }
+    .container { max-width: 1140px; margin: 0 auto; }
+
+    /* ─── DESTINATIONS ───────────────────────────────────────────────────── */
+    #destinations { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .dest-filter {
+      display: flex; gap: 8px; flex-wrap: wrap; margin: 36px 0 28px;
+    }
+    .filter-btn {
+      padding: 7px 18px; border: 1.5px solid var(--border); border-radius: 20px;
+      font-size: .82rem; font-weight: 600; background: transparent; color: var(--muted);
+      transition: all var(--transition);
+    }
+    .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .filter-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+    .dest-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 22px;
+    }
+    .dest-card {
+      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden; cursor: pointer;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .dest-card:hover { transform: translateY(-5px); box-shadow: 0 16px 40px rgba(26,23,20,.13); }
+    .dest-img {
+      height: 200px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 4rem; position: relative; overflow: hidden;
+    }
+    .dest-img-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(26,23,20,.6) 0%, transparent 60%);
+    }
+    .dest-badge {
+      position: absolute; top: 12px; right: 12px;
+      background: var(--gold); color: #fff;
+      font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      padding: 4px 10px; border-radius: 20px;
+    }
+    .dest-info { padding: 18px; }
+    .dest-name { font-family: var(--font-head); font-size: 1.25rem; font-weight: 700; }
+    .dest-meta { display: flex; align-items: center; gap: 14px; margin-top: 8px; color: var(--muted); font-size: .84rem; }
+    .dest-price { margin-top: 14px; display: flex; align-items: baseline; gap: 6px; }
+    .dest-price strong { font-size: 1.35rem; font-weight: 700; color: var(--accent); }
+    .dest-price span { font-size: .82rem; color: var(--muted); }
+
+    /* ─── BOOKING SECTION ────────────────────────────────────────────────── */
+    #booking { background: var(--bg); }
+    .booking-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; margin-top: 52px; }
+    .booking-form {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 32px; box-shadow: var(--shadow);
+      transition: background var(--transition);
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .form-field label { font-size: .76rem; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+    .form-field input, .form-field select, .form-field textarea {
+      padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px;
+      background: var(--bg); color: var(--text); font-family: inherit; font-size: .9rem;
+      outline: none; transition: border-color var(--transition), background var(--transition);
+      resize: vertical;
+    }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: var(--accent); }
+    .btn-book {
+      width: 100%; padding: 14px; background: var(--accent); color: #fff;
+      border: none; border-radius: 10px; font-size: 1rem; font-weight: 700;
+      letter-spacing: .04em; margin-top: 6px; transition: opacity var(--transition);
+    }
+    .btn-book:hover { opacity: .85; }
+    .booking-summary { display: flex; flex-direction: column; gap: 20px; }
+    .summary-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 22px; transition: background var(--transition);
+    }
+    .summary-title { font-family: var(--font-head); font-size: 1.15rem; font-weight: 700; margin-bottom: 14px; }
+    .summary-line { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: .9rem; }
+    .summary-line:last-child { border-bottom: none; font-weight: 700; font-size: 1rem; color: var(--accent); }
+    .summary-line span:first-child { color: var(--muted); }
+
+    /* ─── SERVICES ───────────────────────────────────────────────────────── */
+    #services { background: var(--surface); border-top: 1px solid var(--border); }
+    .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+    .service-card {
+      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 28px; transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .service-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+    .service-icon { font-size: 2.2rem; margin-bottom: 16px; }
+    .service-card h3 { font-family: var(--font-head); font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
+    .service-card p { color: var(--muted); font-size: .9rem; line-height: 1.6; }
+
+    /* ─── FOOTER ─────────────────────────────────────────────────────────── */
+    footer {
+      background: var(--text); color: rgba(255,255,255,.7);
+      padding: 64px 24px 32px;
+    }
+    [data-theme="dark"] footer { background: #080706; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; max-width: 1140px; margin: 0 auto; }
+    .footer-brand .logo { font-family: var(--font-head); font-size: 1.8rem; font-weight: 900; color: var(--accent); letter-spacing: .18em; }
+    .footer-brand p { margin-top: 12px; font-size: .88rem; line-height: 1.7; max-width: 260px; }
+    .footer-col h4 { font-size: .72rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.95); margin-bottom: 14px; }
+    .footer-col a { display: block; margin-bottom: 9px; font-size: .88rem; transition: color var(--transition); }
+    .footer-col a:hover { color: var(--accent); }
+    .footer-bottom { max-width: 1140px; margin: 40px auto 0; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.08); display: flex; justify-content: space-between; font-size: .82rem; }
+    .social-links { display: flex; gap: 12px; margin-top: 16px; }
+    .social-link { width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; font-size: .88rem; transition: background var(--transition), border-color var(--transition); }
+    .social-link:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ─── MODAL (AUTH) ───────────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity var(--transition);
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+      padding: 40px; width: 100%; max-width: 420px; box-shadow: 0 24px 72px rgba(0,0,0,.22);
+      transform: translateY(20px); transition: transform var(--transition), background var(--transition);
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-title { font-family: var(--font-head); font-size: 1.8rem; font-weight: 800; margin-bottom: 6px; }
+    .modal-sub { color: var(--muted); font-size: .88rem; margin-bottom: 28px; }
+    .modal-tabs { display: flex; gap: 0; margin-bottom: 28px; border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .modal-tab { flex: 1; padding: 10px; font-size: .88rem; font-weight: 600; border: none; background: transparent; color: var(--muted); transition: background var(--transition), color var(--transition); }
+    .modal-tab.active { background: var(--accent); color: #fff; }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 1px solid var(--border); background: var(--bg);
+      font-size: 1rem; display: flex; align-items: center; justify-content: center;
+      transition: background var(--transition);
+    }
+    .modal-close:hover { background: var(--accent-lt); }
+    .modal { position: relative; }
+    .modal-form .form-field { margin-bottom: 14px; }
+    .btn-auth {
+      width: 100%; padding: 13px; background: var(--accent); color: #fff;
+      border: none; border-radius: 10px; font-size: .95rem; font-weight: 700;
+      margin-top: 6px; transition: opacity var(--transition);
+    }
+    .btn-auth:hover { opacity: .85; }
+    .auth-divider { text-align: center; color: var(--muted); font-size: .82rem; margin: 16px 0; position: relative; }
+    .auth-divider::before, .auth-divider::after { content: ''; position: absolute; top: 50%; width: 36%; height: 1px; background: var(--border); }
+    .auth-divider::before { left: 0; }
+    .auth-divider::after { right: 0; }
+
+    /* ─── TOAST ──────────────────────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 32px; right: 32px; z-index: 600;
+      background: var(--text); color: var(--bg);
+      padding: 14px 22px; border-radius: 12px; font-size: .9rem; font-weight: 500;
+      box-shadow: 0 8px 32px rgba(0,0,0,.2);
+      transform: translateY(80px); opacity: 0; transition: all .4s cubic-bezier(.4,0,.2,1);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success::before { content: '✓'; color: #4caf50; font-weight: 800; }
+    .toast.error::before { content: '✗'; color: var(--accent); font-weight: 800; }
+
+    /* ─── ANIMATIONS ─────────────────────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity .6s ease, transform .6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      nav { padding: 0 20px; }
+      .search-grid { grid-template-columns: 1fr 1fr; }
+      .btn-search { grid-column: 1 / -1; }
+      .booking-layout { grid-template-columns: 1fr; }
+      .services-grid { grid-template-columns: 1fr 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
+    }
+    @media (max-width: 600px) {
+      .nav-links .hide-mob { display: none; }
+      .search-grid { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .services-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .footer-bottom { flex-direction: column; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════ NAV ═══ -->
+<nav>
+  <div class="nav-logo">U T R I P</div>
+  <div class="nav-links">
+    <a href="#destinations" class="hide-mob">Destinations</a>
+    <a href="#booking" class="hide-mob">Réserver</a>
+    <a href="#services" class="hide-mob">Services</a>
+    <button class="btn-cta" onclick="openAuth('login')">Connexion</button>
+    <button class="theme-toggle" id="themeToggle" title="Basculer le thème">🌙</button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════ HERO ══ -->
+<section class="hero" id="top">
+  <div class="hero-bg"></div>
+  <div class="hero-eyebrow">✈ Votre voyage commence ici</div>
+  <h1 class="hero-title">Where are you<br /><span>flying?</span></h1>
+  <p class="hero-sub">Des hôtels d'exception, des restaurants étoilés et des destinations inoubliables — le tout en un seul clic.</p>
+
+  <!-- Search card -->
+  <div class="search-card">
+    <div class="search-tabs">
+      <button class="tab-btn active" data-tab="vols">✈ Vols</button>
+      <button class="tab-btn" data-tab="hotels">🏨 Hôtels</button>
+      <button class="tab-btn" data-tab="restaurants">🍽 Restaurants</button>
+      <button class="tab-btn" data-tab="packages">🎁 Forfaits</button>
+    </div>
+
+    <div class="search-grid" id="searchGrid">
+      <div class="field" id="fromWrap">
+        <label>De</label>
+        <input type="text" id="fromInput" placeholder="Ville de départ" autocomplete="off" />
+        <div class="autocomplete-list" id="fromList"></div>
+      </div>
+      <div class="field" id="toWrap">
+        <label>À</label>
+        <input type="text" id="toInput" placeholder="Destination" autocomplete="off" />
+        <div class="autocomplete-list" id="toList"></div>
+      </div>
+      <div class="field">
+        <label>Départ</label>
+        <input type="date" id="dateFrom" />
+      </div>
+      <div class="field">
+        <label>Retour</label>
+        <input type="date" id="dateTo" />
+      </div>
+      <button class="btn-search" onclick="handleSearch()">Rechercher</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ DESTINATIONS ═ -->
+<section id="destinations">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="section-label">Explorer</div>
+      <h2 class="section-title">Destinations populaires</h2>
+      <p>Découvrez nos destinations soigneusement sélectionnées pour des expériences mémorables.</p>
+    </div>
+    <div class="dest-filter reveal">
+      <button class="filter-btn active" data-filter="all">Tous</button>
+      <button class="filter-btn" data-filter="afrique">Afrique</button>
+      <button class="filter-btn" data-filter="europe">Europe</button>
+      <button class="filter-btn" data-filter="asie">Asie</button>
+      <button class="filter-btn" data-filter="amerique">Amérique</button>
+    </div>
+    <div class="dest-grid" id="destGrid"></div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════════ BOOKING ════ -->
+<section id="booking">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="section-label">Réservation</div>
+      <h2 class="section-title">Réservez votre voyage</h2>
+      <p>Remplissez le formulaire et notre équipe vous contactera sous 24h pour finaliser votre réservation.</p>
+    </div>
+    <div class="booking-layout">
+      <div class="booking-form reveal">
+        <div class="form-row">
+          <div class="form-field">
+            <label>Prénom</label>
+            <input type="text" id="bkPrenom" placeholder="Jean" />
+          </div>
+          <div class="form-field">
+            <label>Nom</label>
+            <input type="text" id="bkNom" placeholder="Dupont" />
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Email</label>
+          <input type="email" id="bkEmail" placeholder="jean@exemple.com" />
+        </div>
+        <div class="form-field">
+          <label>Destination</label>
+          <select id="bkDest">
+            <option value="">— Choisir une destination —</option>
+            <option>Abidjan, Côte d'Ivoire</option>
+            <option>Paris, France</option>
+            <option>Dakar, Sénégal</option>
+            <option>Dubaï, EAU</option>
+            <option>Tokyo, Japon</option>
+            <option>New York, USA</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Date d'arrivée</label>
+            <input type="date" id="bkArrive" />
+          </div>
+          <div class="form-field">
+            <label>Date de départ</label>
+            <input type="date" id="bkDepart" />
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Type de chambre</label>
+          <select id="bkRoom" onchange="updateSummary()">
+            <option value="499">Standard — 499 XOF/nuit</option>
+            <option value="799">Supérieure — 799 XOF/nuit</option>
+            <option value="1299">Suite — 1 299 XOF/nuit</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Demandes spéciales</label>
+          <textarea id="bkNotes" rows="3" placeholder="Lit bébé, vue mer, régime particulier…"></textarea>
+        </div>
+        <button class="btn-book" onclick="submitBooking()">Confirmer la réservation</button>
+      </div>
+
+      <div class="booking-summary reveal">
+        <div class="summary-card">
+          <div class="summary-title">Récapitulatif</div>
+          <div class="summary-line"><span>Destination</span><span id="sumDest">—</span></div>
+          <div class="summary-line"><span>Type de chambre</span><span id="sumRoom">Standard</span></div>
+          <div class="summary-line"><span>Arrivée</span><span id="sumArrive">—</span></div>
+          <div class="summary-line"><span>Départ</span><span id="sumDepart">—</span></div>
+          <div class="summary-line"><span>Durée</span><span id="sumNights">— nuit(s)</span></div>
+          <div class="summary-line"><span>Total estimé</span><span id="sumTotal">—</span></div>
+        </div>
+        <div class="summary-card" style="background:var(--accent-lt); border-color:var(--accent);">
+          <div class="summary-title" style="color:var(--accent)">🛡 Garanties UTrip</div>
+          <p style="font-size:.88rem;color:var(--muted);line-height:1.7">
+            ✓ Annulation gratuite sous 48h<br />
+            ✓ Meilleur prix garanti<br />
+            ✓ Support 24/7 en français<br />
+            ✓ Paiement sécurisé SSL
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════════ SERVICES ═══ -->
+<section id="services">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="section-label">Ce que nous offrons</div>
+      <h2 class="section-title">Nos services</h2>
+      <p>Une gamme complète de services pour rendre chaque voyage parfait.</p>
+    </div>
+    <div class="services-grid">
+      <div class="service-card reveal"><div class="service-icon">✈</div><h3>Vols</h3><p>Comparez et réservez des vols vers plus de 200 destinations dans le monde entier aux meilleurs tarifs.</p></div>
+      <div class="service-card reveal"><div class="service-icon">🏨</div><h3>Hôtels</h3><p>Des gîtes confortables aux hôtels de luxe 5 étoiles, trouvez l'hébergement qui vous correspond.</p></div>
+      <div class="service-card reveal"><div class="service-icon">🍽</div><h3>Restaurants</h3><p>Découvrez les meilleures tables locales et internationales, sélectionnées par nos experts culinaires.</p></div>
+      <div class="service-card reveal"><div class="service-icon">🚗</div><h3>Location de voiture</h3><p>Liberté totale avec notre flotte de véhicules disponibles dans chaque destination.</p></div>
+      <div class="service-card reveal"><div class="service-icon">🗺</div><h3>Excursions</h3><p>Des guides locaux certifiés pour des visites authentiques, loin des sentiers battus touristiques.</p></div>
+      <div class="service-card reveal"><div class="service-icon">🛡</div><h3>Assurance voyage</h3><p>Voyagez l'esprit tranquille avec nos couvertures complètes adaptées à chaque profil de voyageur.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════════ FOOTER ═════ -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="logo">U T R I P</div>
+      <p>Votre partenaire de confiance pour des voyages inoubliables à travers le monde. Fondé par KGUcorp & Datacorp.</p>
+      <div class="social-links">
+        <a class="social-link" href="#" aria-label="Facebook">f</a>
+        <a class="social-link" href="#" aria-label="Instagram">ig</a>
+        <a class="social-link" href="#" aria-label="Email">@</a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Services</h4>
+      <a href="#booking">Réservation</a>
+      <a href="#services">Restaurants</a>
+      <a href="#services">Vols</a>
+      <a href="#destinations">Hôtels</a>
+    </div>
+    <div class="footer-col">
+      <h4>Partenaires</h4>
+      <a href="#">KGUcorp</a>
+      <a href="#">Datacorp</a>
+    </div>
+    <div class="footer-col">
+      <h4>Légal</h4>
+      <a href="#">Mentions légales</a>
+      <a href="#">Confidentialité</a>
+      <a href="#">CGU</a>
+      <a href="#">Cookies</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 UTrip — KGUcorp. Tous droits réservés.</span>
+    <span>Yamoussoukro · Paris · Dubaï · Tokyo</span>
+  </div>
+</footer>
+
+<!-- ═════════════════════════════════ AUTH MODAL ══ -->
+<div class="modal-overlay" id="authModal" onclick="closeAuthOutside(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeAuth()">✕</button>
+    <div class="modal-title">Bienvenue</div>
+    <div class="modal-sub" id="modalSub">Connectez-vous à votre compte UTrip</div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tabLogin" onclick="switchTab('login')">Connexion</button>
+      <button class="modal-tab" id="tabRegister" onclick="switchTab('register')">Créer un compte</button>
+    </div>
+    <div class="modal-form" id="loginForm">
+      <div class="form-field"><label>Email</label><input type="email" id="authEmail" placeholder="vous@exemple.com" /></div>
+      <div class="form-field"><label>Mot de passe</label><input type="password" id="authPass" placeholder="••••••••" /></div>
+      <button class="btn-auth" onclick="handleAuth('login')">Se connecter</button>
+      <div class="auth-divider">ou</div>
+      <p style="text-align:center;font-size:.84rem;color:var(--muted)"><a href="#" style="color:var(--accent)">Mot de passe oublié ?</a></p>
+    </div>
+    <div class="modal-form" id="registerForm" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-field"><label>Prénom</label><input type="text" id="regPrenom" placeholder="Jean" /></div>
+        <div class="form-field"><label>Nom</label><input type="text" id="regNom" placeholder="Dupont" /></div>
+      </div>
+      <div class="form-field"><label>Email</label><input type="email" id="regEmail" placeholder="vous@exemple.com" /></div>
+      <div class="form-field"><label>Mot de passe</label><input type="password" id="regPass" placeholder="••••••••" /></div>
+      <button class="btn-auth" onclick="handleAuth('register')">Créer mon compte</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═════════════════════════════════ TOAST ══════ -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ─── DESTINATIONS DATA ─────────────────────────────────────────────────── */
+const DESTINATIONS = [
+  { name: "Abidjan", country: "Côte d'Ivoire", flag: "🇨🇮", emoji: "🌴", region: "afrique", price: 320, badge: null, rating: 4.8, nights: null },
+  { name: "Paris",   country: "France",         flag: "🇫🇷", emoji: "🗼", region: "europe",  price: 890, badge: "Coup de cœur", rating: 4.9, nights: null },
+  { name: "Dakar",   country: "Sénégal",        flag: "🇸🇳", emoji: "🐚", region: "afrique", price: 280, badge: null, rating: 4.6, nights: null },
+  { name: "Dubaï",   country: "EAU",            flag: "🇦🇪", emoji: "🏙", region: "asie",    price: 1100, badge: "Luxe", rating: 4.9, nights: null },
+  { name: "Tokyo",   country: "Japon",          flag: "🇯🇵", emoji: "⛩", region: "asie",    price: 1350, badge: null, rating: 4.8, nights: null },
+  { name: "New York", country: "USA",           flag: "🇺🇸", emoji: "🗽", region: "amerique",price: 980, badge: null, rating: 4.7, nights: null },
+  { name: "Accra",   country: "Ghana",          flag: "🇬🇭", emoji: "🌊", region: "afrique", price: 260, badge: "Promo", rating: 4.5, nights: null },
+  { name: "Rome",    country: "Italie",         flag: "🇮🇹", emoji: "🏛", region: "europe",  price: 760, badge: null, rating: 4.8, nights: null },
+  { name: "Bangkok", country: "Thaïlande",      flag: "🇹🇭", emoji: "🛕", region: "asie",    price: 720, badge: null, rating: 4.6, nights: null },
+];
+
+const CITIES = [
+  { name: "Abidjan", code: "ABJ", flag: "🇨🇮" },
+  { name: "Accra", code: "ACC", flag: "🇬🇭" },
+  { name: "Paris CDG", code: "CDG", flag: "🇫🇷" },
+  { name: "Dakar", code: "DKR", flag: "🇸🇳" },
+  { name: "Dubaï", code: "DXB", flag: "🇦🇪" },
+  { name: "Tokyo Narita", code: "NRT", flag: "🇯🇵" },
+  { name: "New York JFK", code: "JFK", flag: "🇺🇸" },
+  { name: "Bamako", code: "BKO", flag: "🇲🇱" },
+  { name: "Lomé", code: "LFW", flag: "🇹🇬" },
+  { name: "Casablanca", code: "CMN", flag: "🇲🇦" },
+  { name: "Lagos", code: "LOS", flag: "🇳🇬" },
+  { name: "Rome", code: "FCO", flag: "🇮🇹" },
+  { name: "Bangkok", code: "BKK", flag: "🇹🇭" },
+];
+
+/* ─── RENDER DESTINATIONS ───────────────────────────────────────────────── */
+let currentFilter = 'all';
+function renderDestinations(filter = 'all') {
+  const grid = document.getElementById('destGrid');
+  const filtered = filter === 'all' ? DESTINATIONS : DESTINATIONS.filter(d => d.region === filter);
+  grid.innerHTML = filtered.map(d => `
+    <div class="dest-card reveal" onclick="selectDestination('${d.name}, ${d.country}')">
+      <div class="dest-img" style="background: linear-gradient(135deg, var(--accent-lt) 0%, var(--border) 100%)">
+        <span style="position:relative;z-index:1">${d.emoji}</span>
+        <div class="dest-img-overlay"></div>
+        ${d.badge ? `<div class="dest-badge">${d.badge}</div>` : ''}
+      </div>
+      <div class="dest-info">
+        <div class="dest-name">${d.flag} ${d.name}</div>
+        <div class="dest-meta">
+          <span>${d.country}</span>
+          <span>⭐ ${d.rating}</span>
+        </div>
+        <div class="dest-price">
+          <strong>€ ${d.price.toLocaleString('fr-FR')}</strong>
+          <span>/ personne</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  observeReveal();
+}
+
+function selectDestination(dest) {
+  document.getElementById('bkDest').value = dest;
+  document.getElementById('sumDest').textContent = dest;
+  document.getElementById('booking').scrollIntoView({ behavior: 'smooth' });
+  showToast(`Destination : ${dest}`, 'success');
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderDestinations(btn.dataset.filter);
+  });
+});
+
+/* ─── TABS ─────────────────────────────────────────────────────────────── */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+/* ─── AUTOCOMPLETE ─────────────────────────────────────────────────────── */
+function setupAutocomplete(inputId, listId) {
+  const input = document.getElementById(inputId);
+  const list  = document.getElementById(listId);
+  input.addEventListener('input', () => {
+    const val = input.value.toLowerCase().trim();
+    if (!val) { list.classList.remove('open'); list.innerHTML = ''; return; }
+    const matches = CITIES.filter(c => c.name.toLowerCase().includes(val) || c.code.toLowerCase().includes(val));
+    if (!matches.length) { list.classList.remove('open'); return; }
+    list.innerHTML = matches.map(c => `
+      <div class="autocomplete-item" onclick="pickCity('${inputId}','${listId}','${c.name} (${c.code})')">
+        <span class="flag">${c.flag}</span>
+        <span>${c.name}</span>
+        <span style="color:var(--muted);font-size:.8rem;margin-left:auto">${c.code}</span>
+      </div>`).join('');
+    list.classList.add('open');
+  });
+  document.addEventListener('click', e => { if (!input.contains(e.target) && !list.contains(e.target)) list.classList.remove('open'); });
+}
+function pickCity(inputId, listId, val) {
+  document.getElementById(inputId).value = val;
+  document.getElementById(listId).classList.remove('open');
+}
+setupAutocomplete('fromInput', 'fromList');
+setupAutocomplete('toInput',   'toList');
+
+/* ─── SEARCH HANDLER ────────────────────────────────────────────────────── */
+function handleSearch() {
+  const from = document.getElementById('fromInput').value;
+  const to   = document.getElementById('toInput').value;
+  const df   = document.getElementById('dateFrom').value;
+  const dt   = document.getElementById('dateTo').value;
+  if (!from || !to) { showToast('Veuillez renseigner départ et destination', 'error'); return; }
+  showToast(`Recherche : ${from} → ${to}`, 'success');
+  /* TODO: connect to flight/hotel API */
+}
+
+/* ─── BOOKING SUMMARY ─────────────────────────────────────────────────── */
+function updateSummary() {
+  const dest   = document.getElementById('bkDest').value || '—';
+  const arrive = document.getElementById('bkArrive').value;
+  const dep    = document.getElementById('bkDepart').value;
+  const price  = parseInt(document.getElementById('bkRoom').value);
+  document.getElementById('sumDest').textContent   = dest;
+  document.getElementById('sumRoom').textContent   = document.getElementById('bkRoom').options[document.getElementById('bkRoom').selectedIndex].text.split(' — ')[0];
+  document.getElementById('sumArrive').textContent  = arrive ? new Date(arrive).toLocaleDateString('fr-FR') : '—';
+  document.getElementById('sumDepart').textContent  = dep ? new Date(dep).toLocaleDateString('fr-FR') : '—';
+  let nights = '—';
+  let total  = '—';
+  if (arrive && dep) {
+    const n = Math.max(0, Math.round((new Date(dep) - new Date(arrive)) / 86400000));
+    nights = n + ' nuit' + (n > 1 ? 's' : '');
+    total  = (n * price).toLocaleString('fr-FR') + ' XOF';
+  }
+  document.getElementById('sumNights').textContent = nights;
+  document.getElementById('sumTotal').textContent  = total;
+}
+['bkDest','bkArrive','bkDepart','bkRoom'].forEach(id =>
+  document.getElementById(id).addEventListener('change', updateSummary)
+);
+
+function submitBooking() {
+  const prenom = document.getElementById('bkPrenom').value;
+  const email  = document.getElementById('bkEmail').value;
+  const dest   = document.getElementById('bkDest').value;
+  if (!prenom || !email || !dest) { showToast('Veuillez remplir tous les champs requis', 'error'); return; }
+  showToast(`Réservation envoyée ! Nous vous contacterons sous 24h, ${prenom}.`, 'success');
+  /* TODO: POST to Flask/Django API */
+}
+
+/* ─── AUTH MODAL ────────────────────────────────────────────────────────── */
+function openAuth(tab = 'login') {
+  document.getElementById('authModal').classList.add('open');
+  switchTab(tab);
+}
+function closeAuth() { document.getElementById('authModal').classList.remove('open'); }
+function closeAuthOutside(e) { if (e.target === document.getElementById('authModal')) closeAuth(); }
+function switchTab(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('tabLogin').classList.toggle('active', isLogin);
+  document.getElementById('tabRegister').classList.toggle('active', !isLogin);
+  document.getElementById('loginForm').style.display    = isLogin ? '' : 'none';
+  document.getElementById('registerForm').style.display = isLogin ? 'none' : '';
+  document.getElementById('modalSub').textContent = isLogin
+    ? 'Connectez-vous à votre compte UTrip'
+    : 'Créez votre compte gratuitement';
+}
+function handleAuth(type) {
+  if (type === 'login') {
+    const e = document.getElementById('authEmail').value;
+    const p = document.getElementById('authPass').value;
+    if (!e || !p) { showToast('Veuillez remplir tous les champs', 'error'); return; }
+    showToast('Connexion réussie ! Bienvenue.', 'success');
+    closeAuth();
+    /* TODO: POST to /api/auth/login */
+  } else {
+    const e = document.getElementById('regEmail').value;
+    const p = document.getElementById('regPass').value;
+    if (!e || !p) { showToast('Veuillez remplir tous les champs', 'error'); return; }
+    showToast('Compte créé avec succès !', 'success');
+    closeAuth();
+    /* TODO: POST to /api/auth/register */
+  }
+}
+
+/* ─── THEME TOGGLE ─────────────────────────────────────────────────────── */
+const html   = document.documentElement;
+const toggle = document.getElementById('themeToggle');
+const saved  = localStorage.getItem('utrip-theme') || 'light';
+html.setAttribute('data-theme', saved);
+toggle.textContent = saved === 'dark' ? '☀' : '🌙';
+toggle.addEventListener('click', () => {
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  toggle.textContent = next === 'dark' ? '☀' : '🌙';
+  localStorage.setItem('utrip-theme', next);
+});
+
+/* ─── TOAST ─────────────────────────────────────────────────────────────── */
+let toastTimer;
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type}`;
+  clearTimeout(toastTimer);
+  requestAnimationFrame(() => { t.classList.add('show'); });
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3800);
+}
+
+/* ─── INTERSECTION OBSERVER (reveal) ────────────────────────────────────── */
+function observeReveal() {
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal:not(.visible)').forEach(el => io.observe(el));
+}
+
+/* ─── INIT ─────────────────────────────────────────────────────────────── */
+renderDestinations();
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('dateFrom').value = today;
+document.getElementById('bkArrive').value = today;
+observeReveal();
+
+/* Set default return date (+7 days) */
+const ret = new Date(); ret.setDate(ret.getDate() + 7);
+document.getElementById('dateTo').value = ret.toISOString().split('T')[0];
+</script>
+</body>
+</html>
