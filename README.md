@@ -134,9 +134,9 @@ This project is proprietary. All rights reserved © 2026 UTrip — KGUcorp.
 ## Contact
 
 | Channel | Link |
-| GitHub | [@leroykgu](https://github.com/leroykgu) |
+| GitHub | [@leroykgu](https://github.com/leroykgu) |  
 | LinkedIn | [www.linkedin.com/in/kouakou-guillaume] |
 
 ---
 
-<p align="center">Made with ☕ in Yamoussoukro — <strong>U T R I P</strong></p>
+<p align="center">Made by KGU in Yamoussoukro — <strong>U T R I P</strong></p>
