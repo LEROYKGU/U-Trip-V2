@@ -8,7 +8,7 @@
 
 UTrip is a French-language travel web application targeting West African and international travelers. It provides an end-to-end trip planning experience — from searching destinations to submitting booking requests — with a clean, responsive UI and dark mode support.
 
-**Live demo:** [leroykgu.github.io/UTrip](https://leroykgu.github.io/UTrip/)
+**Live demo:** [leroykgu.github.io/UTrip](https://leroykgu.github.io/U-Trip-V2/)
 
 ---
 
